@@ -11,14 +11,14 @@ and open the template in the editor.
     </head>
     <body>
         <?php
-        require "\DB.php";
-        require "\DBQuery.php";
+        require __DIR__  . '\DB.php';
+        require __DIR__ . '\DBQuery.php';
         
         $db = DB::connect('mysql:dbname=mail;host=localhost','root','');
                 
         $db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
-        $query = new DBQuery($db->getPdoInstance());
+        $query = new DBQuery($db);
         
         echo '<br><br>queryAll<br><br>';
         print_r($query->queryAll('SELECT * FROM users', $dat));
@@ -32,15 +32,21 @@ and open the template in the editor.
         
         $data = [':login' => 'Red' . rand(1,99999), ':email' => 'green+' . rand(1,99999) . '@gmail.com',':password' => password_hash('qwerty' . time() ,PASSWORD_DEFAULT)];
         echo '<br>execute<br>';
+        
+        $rowCount = $query->execute("DELETE FROM users WHERE id > :id", ['id' => 20]);
+        echo "count deleted row -> " . $rowCount;
                          
         $rowCount = $query->execute("INSERT INTO users (login, email, password) VALUES (:login,:email,:password)", $data);
 
-        echo "count inserts row -> " . $rowCount;
+        echo "<br>count inserts row -> " . $rowCount;
+        
+        
+        
         $db->reconnect();
         $lastId = $db->getLastInsertID();
         echo "<br><br>last InsertID -> " . $lastId;
         echo '<br>';
-        print_r($query->queryRow('SELECT * FROM users where id = :id', ['id' => $lastId]));
+        print_r($query->queryRow("SELECT * FROM users where id = :id", ['id' => $lastId]));
         
         $updateData = ['password' => password_hash('qwerty' . time() ,PASSWORD_DEFAULT),'id' => $lastId];
 
@@ -51,6 +57,7 @@ and open the template in the editor.
         echo "<br>count delete row -> " . $rowCountDelete;
         
         echo "<br>last query execution time -> ".$query->getLastQueryTime() . "\n";
+        $db->close();
          
         ?>
     </body>
